@@ -1,0 +1,109 @@
+import numpy as np
+import multiprocessing
+from utils import get_device
+
+# random
+SEED = 100
+
+# physical variables
+V_P = 343  # m/s
+F_SAMPLE = 3e5  # Hz
+
+# utilities
+IND2DISTANCE = 0.5*V_P/F_SAMPLE
+DISTANCE2IND = 1/IND2DISTANCE
+
+# physical variables
+F_CHIRP_START = 1e5  # Hz
+F_CHIRP_END = 3e4  # Hz
+TX_SIGNAL_LENGTH = 3e-3  # sec
+TX_SIGNAL_POWER = 1e14  # SPL
+NOISE_POWER = 1  # SPL
+A_MOUTH = 3e-3  # m
+A_EAR = 7e-3  # m
+DIST_EARS = 2e-2  # m
+
+TX_SIGNAL_LENGTH_IND = int(TX_SIGNAL_LENGTH*F_SAMPLE)
+TX_SIGNAL_POWER_DB = 10*np.log10(TX_SIGNAL_POWER)  # dB-SPL
+NOISE_POWER_DB = 10*np.log10(NOISE_POWER)  # dB-SPL
+
+# model
+MAX_LAYERS_UP_SAMPLING = 5
+KERNEL_SIZE = 11
+MAX_CH = 128
+N_TRANS_HEAD = 4
+DROP_PROB = 0.2
+N_TRANS_LAYERS = 1
+ATT_TYPE = "Mult"  # "Mult" "Add"
+MODEL_NAME = "U_Net"  # [U_Net AttU_Net TransU_Net R2AttU_Net R2TransU_Net]
+
+# dataset
+NUM_DECIMALS_ROUND = 5
+R_TARGET_MIN = 0.05  # m
+R_TARGET_MAX = 0.3  # m
+DISTANCE_MIN = 1  # m
+DISTANCE_MAX = 3  # m
+PHI_MIN = 0  # rad
+PHI_MAX = np.pi / 2  # rad
+THETA_MIN = -np.pi  # rad
+THETA_MAX = np.pi  # rad
+
+MIN_TARGETS = 1
+MAX_TARGETS = 10
+NUM_SAMPLES = 10000
+TRAIN_RATIO = 0.6
+VALIDATION_RATIO = 0.15
+TEST_RATIO = 0.25
+
+REF_GAIN_FOR_NORMALIZATION = 1e-2  # SPL
+DATA_LEN_BASE = 2**MAX_LAYERS_UP_SAMPLING
+
+DATA_LEN = int(DISTANCE_MAX * DISTANCE2IND + TX_SIGNAL_LENGTH_IND)
+DATA_LEN_3D = int((DISTANCE_MAX + DIST_EARS / 2) * DISTANCE2IND + TX_SIGNAL_LENGTH_IND)
+LABEL_LEN = int(2 * MAX_TARGETS)  # for each target distance and phi
+LABEL_LEN_3D = int(3 * MAX_TARGETS)  # for each target distance, theta and phi
+
+
+REF_GAIN_FOR_NORMALIZATION_DB = 10*np.log10(REF_GAIN_FOR_NORMALIZATION)  # db-SPL
+
+DATA_PADDING_LEN = 0
+if DATA_LEN % DATA_LEN_BASE != 0:
+    DATA_PADDING_LEN = int((DATA_LEN // DATA_LEN_BASE + 1) * DATA_LEN_BASE - DATA_LEN)
+
+DATA_LEN_ROUNDED = int(DATA_LEN + DATA_PADDING_LEN)
+
+DATA_PADDING_LEN_3D = 0
+if DATA_LEN_3D % DATA_LEN_BASE != 0:
+    DATA_PADDING_LEN_3D = int((DATA_LEN_3D // DATA_LEN_BASE + 1)
+                              * DATA_LEN_BASE - DATA_LEN_3D)
+
+DATA_LEN_ROUNDED_3D = int(DATA_LEN_3D + DATA_PADDING_LEN_3D)
+
+# performance
+SEG_2_RANGE_THRESHOLD = 10
+MAX_POSS_SEQ_TARGETS = int(np.min([MAX_TARGETS*0.4, (DATA_LEN_ROUNDED-DISTANCE_MIN*DISTANCE2IND)/TX_SIGNAL_LENGTH_IND]))
+RX_SIGNAL_REF_GAIN = 1e-2  # [1e-1, 1e-2] # SPL
+BOX_COX_LAMBDA = 0  # [0, 0]
+
+# hardware
+MAX_CPUS = int(np.min([multiprocessing.cpu_count(), 8]))
+DEVICE = get_device()
+
+# training default values
+LEARNING_RATE = 5e-4
+FWEIGHT_DECAY = 0
+BETAS = (0.7, 0.7)
+LR_SCHEDUALER_MIN_LR = 1e-9
+NUM_EPOCHS = 120
+BATCH_SIZE = 64
+SAVE_EVERY = 20000
+
+# files
+DATASET_FOLDER = "dataset"
+PARAMS_FOLDER = "model_params"
+BASE_DATASET_NAME_2D = "dataset_2D.npy"
+BASE_DATASET_NAME_3D = "dataset_3D.npy"
+TX_WAVEFORM_FILE_NAME = "TxWaveform.npy"
+
+# plots
+FIG_SIZE = (10, 8)
