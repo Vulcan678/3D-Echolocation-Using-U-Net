@@ -1,4 +1,4 @@
-Using segmentation U-Net Network to mimic 3D echolocation, target detection, and range estimation, with overlapping returned echoes.
+## Using segmentation U-Net Network to mimic 3D echolocation, target detection, and range estimation, with overlapping returned echoes.
 
 Simulating scenes of a bat transmitting an echo and receiving the echoes, in 2 ears, reflecting from targets in 3D space around the bat.
 Scene limits:
@@ -17,8 +17,8 @@ Due to echo length, small ranges, and large target numbers, many echoes overlap 
 
 ![image](https://github.com/Vulcan678/3D-Echolocation-Using-U-Net/assets/153300908/16a2fe88-4397-4efd-a33b-9cc1e5835634)
 
-The U-Net Segmentation Network is used to get as input the received echoes in the time domain and perform segmentation of the number of echoes for each time sample. 
-The original U-Net is used for image segmentation while here it is used for 1D signal segmentation.
+The **U-Net Segmentation Network** is used to get as input the received echoes in the time domain and perform segmentation of the number of echoes for each time sample. 
+The original U-Net is used for image segmentation while here it is used for 1D signal segmentation. The implementation, training and evaluation were performed using **PyTorch** and**Numpy**.
 
 ![image](https://github.com/Vulcan678/3D-Echolocation-Using-U-Net/assets/153300908/6eb096cf-9594-42dc-b594-2ebd56ce7f4e)
 
@@ -49,7 +49,7 @@ Training parameters:
 | Maximal epochs           | 120               |
 | Learning rate schedualer | CosineAnnealingLR |
 
-To achieve the best training procedure and result I implemented hyperparameter optimization using HyperOpt and the variable training parameters were:
+To achieve the best training procedure and result I implemented **bayesian hyperparameter optimization** using HyperOpt and the variable training parameters were:
 1. Batch size: 32 to 64 samples
 2. Initial learning rate: 1e-8 to 1e-2
 3. Weight decay: 0 to 0.1
@@ -66,7 +66,7 @@ The variable loss functions were:
 5. Focal loss
 6. Tversky loss ($\alpha=0.2, \beta=0.8$)
 
-The output segmentation of the network is noisy so I applied an algorithm to filter changes in segmentations.
+The output segmentation of the network is noisy so I applied a **tailored algorithm to filter changes in segmentations**.
 The algorithm output is a segmentation based on pairs of segmentation value jump and segmentation value drop where the distance between them is equal to echo length, with an allowed error threshold.
 
 For performance evaluation classic target detection and range estimation metrics are used:
@@ -77,7 +77,7 @@ $$\left( 1/N \right) \sum_{n=1}^N \left[ num \left( r_n^{true} \right) - num \le
 3. False alarm rate (FA rate) =
 $$\left( 1/N \right) \sum_{n=1}^N \left[ num \left( r_n^{est} \right) - num \left(r_n^{true} \right) \right]*I_{num \left(r_n^{est} \right) > num \left(r_n^{true} \right)} $$
 
-From all the models trained and evaluated on the validation set from the hyperparameter optimization the models on the Pareto front are found by the metrics: MAE, MD rate, FA rate and Dice loss. From the Pareto front, the selected best model is by the minimal sum of ranking of the models' performance metrics relative to the other Pareto front models.
+From all the models trained and evaluated on the validation set from the hyperparameter optimization the models on the **Pareto front** are found by the metrics: MAE, MD rate, FA rate and Dice loss. From the Pareto front, the selected best model is by the minimal sum of ranking of the models' performance metrics relative to the other Pareto front models.
 
 The result of different network architectures:
 
